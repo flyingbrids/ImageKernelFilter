@@ -9,6 +9,7 @@ simulation/
 *.rpt
 *.txt
 *.bak
-
+greybox_tmp/
+IP/*.v
 
 

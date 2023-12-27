@@ -15,7 +15,8 @@
 //**                     :
 //**
 //*******************************************************************************************
-module BlurFilterTB (); 
+`timescale 1ns / 1ps
+module ImageFilterTB (); 
 
 localparam FRAME_CNT    = 1;   // # of test image 
 localparam CLOCK_FREQ   = 200; // MHz
@@ -131,7 +132,9 @@ generate
  end
 endgenerate
 
-BlurFilter DUT 
+logic   [8-1:0]                            mask_out;
+logic                                      out_vld; 
+ImageFilter DUT 
 (	   
      .sys_clk     (sys_clk)
     ,.sys_rst     (sys_rst) // reset associated with clk
@@ -141,8 +144,10 @@ BlurFilter DUT
     ,.new_frame   (new_frame)
     ,.data_in     (imageData_in)
     ,.data_vld    (imageDataVld)  
+    ,.mask_out    (mask_out) 
+	 ,.out_vld     (out_vld)
 );
-
+// filter 3x3 
 task automatic capture_3x3;
 int x=START_ROW; 
 int y=0;
@@ -155,11 +160,11 @@ int img ;
         do begin
           @(posedge DUT.sys_clk);
            if(DUT.filt_3x3_vld ) begin
-             for (int i=7; i>=0; i--)
+             for (int i=LANE_N-1; i>=0; i--)
                $fwrite(img,"%d\n",DUT.filt_3x3_data[DWIDTH*i +: DWIDTH]);             
-              y=y+8;
+              y=y+1;
             end
-        end while (y<COL_NUM);
+        end while (y<PIX_PER_SLOT);
         y=0;
         x=x+1;
       end while (x<STOP_ROW);     
@@ -167,6 +172,35 @@ int img ;
     $fclose(img);
   end
 endtask
+
+// sobel edge mask capture 
+task automatic sobel_edge;
+    int img;
+	 int row_cnt, col_cnt;
+    begin 
+		img = $fopen($sformatf("imgr%0d_edgeGrad.pgm",frame_cnt+1),"w");
+		$fwrite(img,"P2\n%d%d\n# CREATOR: LeonShen\n1023\n",COL_NUM,ROW_NUM);
+		row_cnt = 0;
+		col_cnt = 0;
+		while (row_cnt < STOP_ROW) begin
+			@(posedge sys_clk);
+			if (out_vld) begin 	
+				for (int i=LANE_N-1; i>=0; i--) begin
+				     if(mask_out[i]) begin
+				       $fwrite(img,"%d\n",1023);
+					 end else begin
+					   $fwrite(img,"%d\n",0);
+					 end 			 
+				end	
+				col_cnt = (col_cnt == PIX_PER_SLOT-1)? 0 : col_cnt + 1;
+            row_cnt = (col_cnt == PIX_PER_SLOT-1)? row_cnt + 1 : row_cnt;	
+			   #1;	
+			end 
+		end
+		$display("<<TESTBENCH NOTE>> sobel edge captured!");
+		$fclose(img);
+    end 
+endtask 
 
 
 initial begin
@@ -185,6 +219,7 @@ initial begin
 	 fork
 	    load_image();
 		 capture_3x3();
+		 sobel_edge();
 	 join
   end
   $stop();
