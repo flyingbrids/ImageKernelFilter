@@ -137,14 +137,15 @@ logic [4:0] vld_dly ;
 
 assign purge      = (row_cnt == rows-1'b1); 
 assign stream_vld = (data_vld & buff1_full) | purge ; // Data is valid out of the line buffers
-assign data_out   = filt_data_out ;    
-assign out_vld    = vld_dly[4] ;
+
 always_ff @ (posedge clk or posedge reset) begin
   if (reset) begin
     vld_dly  <= '0 ;
   end else begin
     // 3 clk pipeline in calculation, 2 clk delay in stream_array assignment
     vld_dly <= {vld_dly[3:0],stream_vld} ;
+	 data_out <= filt_data_out ;    
+    out_vld  <= vld_dly[4] ;
   end
 end
 

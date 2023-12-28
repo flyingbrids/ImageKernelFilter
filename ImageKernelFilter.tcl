@@ -14,8 +14,8 @@
 # agreement for further details.
 
 # Quartus II: Generate Tcl File for Project
-# File: ImageKernelFilter
-# Generated on: Wed Dec 27 17:07:41 2023
+# File: ImageKernelFilter.tcl
+# Generated on: Thu Dec 28 17:42:04 2023
 
 # Load Quartus II Tcl Project package
 package require ::quartus::project
@@ -79,6 +79,10 @@ if {$make_assignments} {
 	set_global_assignment -name SYSTEMVERILOG_FILE source/sqrt_pipeline.sv
 	set_global_assignment -name QIP_FILE IP/theta_lut.qip
 	set_global_assignment -name QIP_FILE IP/divide_xy.qip
+	set_global_assignment -name SYSTEMVERILOG_FILE source/non_max_suppression.sv
+	set_global_assignment -name SYSTEMVERILOG_FILE source/nms_3x3_mask.sv
+	set_global_assignment -name SYSTEMVERILOG_FILE source/filter_5x5.sv
+	set_global_assignment -name SYSTEMVERILOG_FILE source/filter_5x5_mask.sv
 	set_instance_assignment -name VIRTUAL_PIN ON -to data_vld
 	set_instance_assignment -name VIRTUAL_PIN ON -to colSize
 	set_instance_assignment -name VIRTUAL_PIN ON -to rowSize

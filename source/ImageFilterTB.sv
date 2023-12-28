@@ -144,6 +144,7 @@ ImageFilter DUT
     ,.new_frame   (new_frame)
     ,.data_in     (imageData_in)
     ,.data_vld    (imageDataVld)  
+	 ,.filer_5x5_sel('0)
     ,.mask_out    (mask_out) 
 	 ,.out_vld     (out_vld)
 );
@@ -173,12 +174,67 @@ int img ;
   end
 endtask
 
+// filter 5x5 
+task automatic capture_5x5;
+int x=START_ROW; 
+int y=0;
+int img ;
+  begin
+   img = $fopen($sformatf("imgr%0d_5x5filter.pgm",frame_cnt+1),"w");
+   $fwrite(img,"P2\n%d%d\n# CREATOR: Shen\n1023\n",COL_NUM,ROW_NUM);    
+   @(posedge DUT.filt_5x5_vld)  
+      do begin
+        do begin
+          @(posedge DUT.sys_clk);
+           if(DUT.filt_5x5_vld ) begin
+             for (int i=LANE_N-1; i>=0; i--)
+               $fwrite(img,"%d\n",DUT.filt_5x5_data[DWIDTH*i +: DWIDTH]);             
+              y=y+1;
+            end
+        end while (y<PIX_PER_SLOT);
+        y=0;
+        x=x+1;
+      end while (x<STOP_ROW);     
+    $display("<<TESTBENCH NOTE>> 5x5 Filter succesfully captured!"); 
+    $fclose(img);
+  end
+endtask
+
 // sobel edge mask capture 
 task automatic sobel_edge;
     int img;
 	 int row_cnt, col_cnt;
     begin 
 		img = $fopen($sformatf("imgr%0d_edgeGrad.pgm",frame_cnt+1),"w");
+		$fwrite(img,"P2\n%d%d\n# CREATOR: LeonShen\n1023\n",COL_NUM,ROW_NUM);
+		row_cnt = 0;
+		col_cnt = 0;
+		while (row_cnt < STOP_ROW) begin
+			@(posedge sys_clk);
+			if (DUT.grad_vld) begin 	
+				for (int i=LANE_N-1; i>=0; i--) begin
+				     if(DUT.grad_mask[i]) begin
+				       $fwrite(img,"%d\n",1023);
+					 end else begin
+					    $fwrite(img,"%d\n",0);
+					 end 			 
+				end	
+				col_cnt = (col_cnt == PIX_PER_SLOT-1)? 0 : col_cnt + 1;
+            row_cnt = (col_cnt == PIX_PER_SLOT-1)? row_cnt + 1 : row_cnt;	
+			   #1;	
+			end 
+		end
+		$display("<<TESTBENCH NOTE>> sobel edge captured!");
+		$fclose(img);
+    end 
+endtask 
+
+// non-max edge mask capture 
+task automatic non_max_edge;
+    int img;
+	 int row_cnt, col_cnt;
+    begin 
+		img = $fopen($sformatf("imgr%0d_nonMax.pgm",frame_cnt+1),"w");
 		$fwrite(img,"P2\n%d%d\n# CREATOR: LeonShen\n1023\n",COL_NUM,ROW_NUM);
 		row_cnt = 0;
 		col_cnt = 0;
@@ -197,12 +253,12 @@ task automatic sobel_edge;
 			   #1;	
 			end 
 		end
-		$display("<<TESTBENCH NOTE>> sobel edge captured!");
+		$display("<<TESTBENCH NOTE>> non_max edge captured!");
 		$fclose(img);
     end 
 endtask 
 
-
+// main function
 initial begin
   wait_for_reset();
   for (frame_cnt = 0; frame_cnt < FRAME_CNT; frame_cnt++) begin
@@ -219,7 +275,9 @@ initial begin
 	 fork
 	    load_image();
 		 capture_3x3();
+		 capture_5x5();
 		 sobel_edge();
+		 non_max_edge();
 	 join
   end
   $stop();
