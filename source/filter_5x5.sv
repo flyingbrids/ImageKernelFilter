@@ -147,7 +147,7 @@ always_ff @ (posedge clk or posedge reset) begin
   
     //----
     if (stream_vld)     
-      col_cnt <= col_cnt + 1'b1 ;
+      col_cnt <= col_cnt == col_full? '0 : col_cnt + 1'b1 ;
     //----  
     if (col_cnt == col_full && stream_vld)
       row_cnt <= row_cnt + 1'b1 ;
