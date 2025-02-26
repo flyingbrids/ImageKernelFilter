@@ -12,3 +12,4 @@ The filters are currently organized as follows
          
 Image --> 3x3 or 5x5 low pass (smooth) filter -> 3x3 sobel edge filter (high pass) -> gradient calculation -> 3x3 gradient non-max filter -> filtered image 
          
+NOTE: In Quartus 13.1, to run the simulation, you will need to open Option=>EDA Tool Options, in the Modelsim_Altera executable path, add "\" at the end. 
