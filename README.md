@@ -14,5 +14,17 @@ Image --> 3x3 or 5x5 low pass (smooth) filter -> 3x3 sobel edge filter (high pas
 Orignal Image 
 ![alt text](https://github.com/flyingbrids/ImageKernelFilter/blob/main/imgr1.jpg?raw=true)
 
+Apply 3x3 low pass filter
+![alt text](https://github.com/flyingbrids/ImageKernelFilter/blob/main/imgr1_3x3filter.jpg?raw=true)
+
+Apply 5x5 low pass filter
+![alt text](https://github.com/flyingbrids/ImageKernelFilter/blob/main/imgr1_5x5filter.jpg?raw=true)
+
+Apply sobel filter and plot gradient magnitude above the set threshold
+![alt text](https://github.com/flyingbrids/ImageKernelFilter/blob/main/imgr1_edgeGrad.jpg?raw=true)
+
+Apply non-max filter after sobel 
+![alt text](https://github.com/flyingbrids/ImageKernelFilter/blob/main/imgr1_nonMax.jpg?raw=true)
+
          
 NOTE: In Quartus 13.1, to run the simulation, you will need to open Option=>EDA Tool Options, in the Modelsim_Altera executable path, add "\" at the end. 
